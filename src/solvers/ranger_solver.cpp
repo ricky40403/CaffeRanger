@@ -23,7 +23,7 @@ void ranger_update_gpu(int N,
     Dtype* v_mut_gpu_data,
     const Dtype* slow_gpu_data,  Dtype* slow_mut_gpu_data, 
     Dtype beta1, Dtype beta2, Dtype eps_hat, Dtype corrected_local_rate,
-    const Dtype N_sma, const Dtype N_sma_threshhold,
+    const Dtype N_sma, const Dtype N_sma_threshold,
     const int t, const int k_thres, const Dtype alpha
     );
     
@@ -36,10 +36,13 @@ void RangerSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   Dtype local_rate = rate * net_params_lr[param_id];
   const Dtype beta1 = this->param_.momentum();
   const Dtype beta2 = this->param_.momentum2();
-  const Dtype alpha = this->param_.alpha();
+  // const Dtype alpha = this->param_.alpha();
   // Dtype => will be float and % can not use 
-  const int k_thres = this->param_.k_thres();
-  const Dtype N_sma_threshhold = this->param_.n_sma_threshhold();
+  // const int k_thres = this->param_.k_thres();
+  // const Dtype N_sma_threshold = this->param_.n_sma_threshold();
+  const Dtype alpha = 0.5;
+  const int k_thres = 5;
+  const Dtype N_sma_threshold = 5;
     
   // we create aliases for convenience
   size_t update_history_offset = net_params.size();
@@ -63,7 +66,7 @@ void RangerSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   const Dtype N_sma = N_sma_max - (2 * t * beta2_t) / (1 - beta2_t);
 
   Dtype correction = Dtype(1.) / (Dtype(1.) -  beta1_t);
-  if (N_sma > N_sma_threshhold){
+  if (N_sma > N_sma_threshold){
       // (r_t)
       Dtype tmp = (Dtype(1) - beta2_t) * ((N_sma - Dtype(4)) * (N_sma - Dtype(2)) * N_sma_max) / ((N_sma_max - Dtype(4)) * (N_sma_max - Dtype(2)) * N_sma);
       tmp = pow(tmp, 0.5) ;
@@ -92,7 +95,7 @@ void RangerSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
     
     
     // val_m = val_m / (sqrt(val_v)+eplison)
-    if (N_sma > N_sma_threshhold){
+    if (N_sma > N_sma_threshold){
       //  v ^1/2
       caffe_powx(N,
           val_v->cpu_data(), Dtype(0.5),
@@ -146,7 +149,7 @@ void RangerSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
         val_v->mutable_gpu_data(),
         val_slow->gpu_data(), val_slow->mutable_gpu_data(),
         beta1, beta2, eps_hat, local_rate*correction,
-        N_sma, N_sma_threshhold,
+        N_sma, N_sma_threshold,
         t, k_thres, alpha
     );
     
