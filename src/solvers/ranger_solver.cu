@@ -30,7 +30,7 @@ __global__ void RangerUpdate(int N,
     if ((t%k_thres) == 0){
       
       // set slow 
-      float slow = slow_mut_gpu_data[i] = alpha  * ( g_gpu_data[i] - slow_gpu_data[i] );
+      float slow = slow_mut_gpu_data[i] = slow_gpu_data[i] + alpha  * ( g_gpu_data[i] - slow_gpu_data[i] );
 
       //p => slow_p
       //p_diff  = p - slow_p 
