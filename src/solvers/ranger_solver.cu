@@ -11,7 +11,8 @@ __global__ void RangerUpdate(int N,
     const Dtype* slow_gpu_data,  Dtype* slow_mut_gpu_data, 
     Dtype beta1, Dtype beta2, Dtype eps_hat, Dtype corrected_local_rate,
     Dtype N_sma, const Dtype N_sma_threshold,
-    const int t, const int k_thres, const Dtype alpha
+    const int t, const int k_thres, const Dtype alpha,
+    const bool use_lookahead
     ) {
   CUDA_KERNEL_LOOP(i, N) {
     float gdiff = g_mut_gpu_diff[i];
@@ -27,7 +28,7 @@ __global__ void RangerUpdate(int N,
 
     
     
-    if ((t%k_thres) == 0){
+    if (use_lookahead && ((t%k_thres) == 0)){
       
       // set slow 
       float slow = slow_mut_gpu_data[i] = slow_gpu_data[i] + alpha  * ( g_gpu_data[i] - slow_gpu_data[i] );
@@ -52,7 +53,8 @@ void ranger_update_gpu(int N,
     const Dtype* slow_gpu_data,  Dtype* slow_mut_gpu_data, 
     Dtype beta1, Dtype beta2, Dtype eps_hat, Dtype corrected_local_rate,
     const Dtype N_sma, const Dtype N_sma_threshold,
-    const int t, const int k_thres, const Dtype alpha
+    const int t, const int k_thres, const Dtype alpha,
+    const bool use_lookahead
     ) {
 
   
@@ -64,7 +66,8 @@ void ranger_update_gpu(int N,
       slow_gpu_data, slow_mut_gpu_data,
       beta1, beta2, eps_hat, corrected_local_rate,
       N_sma, N_sma_threshold,
-      t, k_thres, alpha
+      t, k_thres, alpha,
+      use_lookahead
       );
   
   CUDA_POST_KERNEL_CHECK;
@@ -76,7 +79,8 @@ template void ranger_update_gpu<float>(int,
     const float*, float*,
     float, float, float, float,
     const float, const float,
-    const int, const int, const float
+    const int, const int, const float,
+    const bool
     );
 
 template void ranger_update_gpu<double>(int,
@@ -86,7 +90,9 @@ template void ranger_update_gpu<double>(int,
     const double*, double*,
     double, double, double, double,
     const double, const double,
-    const int, const int, const double
+    const int, const int, const double,
+    const bool use_lookahead
+    
     );
 
 }  // namespace caffe

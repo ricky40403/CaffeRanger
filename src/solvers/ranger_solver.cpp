@@ -24,7 +24,8 @@ void ranger_update_gpu(int N,
     const Dtype* slow_gpu_data,  Dtype* slow_mut_gpu_data, 
     Dtype beta1, Dtype beta2, Dtype eps_hat, Dtype corrected_local_rate,
     const Dtype N_sma, const Dtype N_sma_threshold,
-    const int t, const int k_thres, const Dtype alpha
+    const int t, const int k_thres, const Dtype alpha,
+    const bool use_lookahead
     );
     
 #endif
@@ -36,13 +37,16 @@ void RangerSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   Dtype local_rate = rate * net_params_lr[param_id];
   const Dtype beta1 = this->param_.momentum();
   const Dtype beta2 = this->param_.momentum2();
-  // const Dtype alpha = this->param_.alpha();
+  const Dtype alpha = this->param_.ranger_alpha();
   // Dtype => will be float and % can not use 
-  // const int k_thres = this->param_.k_thres();
-  // const Dtype N_sma_threshold = this->param_.n_sma_threshold();
-  const Dtype alpha = 0.5;
-  const int k_thres = 5;
-  const Dtype N_sma_threshold = 5;
+  const int k_thres = this->param_.ranger_k_thres();
+  const Dtype N_sma_threshold = this->param_.ranger_n_sma_threshold();
+  // has not decide put where
+  const bool use_radam = this->param_.ranger_use_radam();
+  const bool use_lookahead = this->param_.ranger_use_lookahead();
+  //const Dtype alpha = 0.5;
+  // const int k_thres = 5;
+  // const Dtype N_sma_threshold = 5;
     
   // we create aliases for convenience
   size_t update_history_offset = net_params.size();
@@ -123,7 +127,7 @@ void RangerSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
         net_params[param_id]->mutable_cpu_diff());
 
     // look ahead
-    if ((t % k_thres) == 0){
+    if (use_lookahead && ((t % k_thres) == 0)){
       // slow = alpha * (p - slow_p) = alpha * p - alpha * slow_p
       caffe_cpu_axpby(N,
         Dtype(alpha), net_params[param_id]->cpu_data(),
@@ -150,7 +154,8 @@ void RangerSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
         val_slow->gpu_data(), val_slow->mutable_gpu_data(),
         beta1, beta2, eps_hat, local_rate*correction,
         N_sma, N_sma_threshold,
-        t, k_thres, alpha
+        t, k_thres, alpha,
+        use_lookahead
     );
     
 

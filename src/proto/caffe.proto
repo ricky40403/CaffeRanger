@@ -256,9 +256,11 @@ message SolverParameter {
   // in repeated weights parameters separately.
   repeated string weights = 42;
 
-  optional float alpha = 43 [default = 0.5];
-  optional int32 k_thres = 44 [default = 6];
-  optional float n_sma_threshhold = 45 [default = 5.0];
+  optional float ranger_alpha = 43 [default = 0.5];
+  optional int32 ranger_k_thres = 44 [default = 6];
+  optional float ranger_n_sma_threshold = 45 [default = 5.0];
+  optional bool ranger_use_radam = 45 [default = true];
+  optional bool ranger_use_lookahead = 45 [default = true];
 
 }
 
