@@ -128,7 +128,7 @@ void RangerSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
 
     // look ahead
     if (use_lookahead && ((t % k_thres) == 0)){
-      // slow = alpha * (p - slow_p) = alpha * p - alpha * slow_p
+      // slow += alpha * (p - slow_p) = alpha * p - alpha * slow_p
       caffe_cpu_axpby(N,
         Dtype(alpha), net_params[param_id]->cpu_data(),
         Dtype(alpha), val_slow->mutable_cpu_data()        
